@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.37.4.10188",
-      "templateHash": "18259451660675302714"
+      "templateHash": "17781196443714700784"
     }
   },
   "parameters": {
@@ -760,10 +760,10 @@
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, if(not(empty(parameters('resourceGroupName'))), parameters('resourceGroupName'), format('{0}{1}', variables('abbrs').resourcesResourceGroups, parameters('environmentName')))), 'Microsoft.Resources/deployments', 'appserviceplan'), '2022-09-01').outputs.resourceId.value]"
           },
           "runtimeName": {
-            "value": "java"
+            "value": "node"
           },
           "runtimeVersion": {
-            "value": "17"
+            "value": "18"
           },
           "storageAccountName": {
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, if(not(empty(parameters('resourceGroupName'))), parameters('resourceGroupName'), format('{0}{1}', variables('abbrs').resourcesResourceGroups, parameters('environmentName')))), 'Microsoft.Resources/deployments', 'storage'), '2022-09-01').outputs.name.value]"
@@ -777,7 +777,7 @@
           "appSettings": {
             "value": {}
           },
-          "virtualNetworkSubnetId": "[if(parameters('vnetEnabled'), createObject('value', format('{0}/subnets/app', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, if(not(empty(parameters('resourceGroupName'))), parameters('resourceGroupName'), format('{0}{1}', variables('abbrs').resourcesResourceGroups, parameters('environmentName')))), 'Microsoft.Resources/deployments', 'serviceVirtualNetwork'), '2022-09-01').outputs.resourceId.value)), createObject('value', ''))]",
+          "virtualNetworkSubnetId": "[if(parameters('vnetEnabled'), createObject('value', format('{0}/subnets/app', tryGet(if(parameters('vnetEnabled'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, if(not(empty(parameters('resourceGroupName'))), parameters('resourceGroupName'), format('{0}{1}', variables('abbrs').resourcesResourceGroups, parameters('environmentName')))), 'Microsoft.Resources/deployments', 'serviceVirtualNetwork'), '2022-09-01'), null()), 'outputs', 'resourceId', 'value'))), createObject('value', ''))]",
           "serviceBusQueueName": "[if(not(empty(parameters('serviceBusQueueName'))), createObject('value', parameters('serviceBusQueueName')), createObject('value', format('{0}{1}', variables('abbrs').serviceBusNamespacesQueues, variables('resourceToken'))))]",
           "serviceBusNamespaceFQDN": {
             "value": "[format('{0}.servicebus.windows.net', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, if(not(empty(parameters('resourceGroupName'))), parameters('resourceGroupName'), format('{0}{1}', variables('abbrs').resourcesResourceGroups, parameters('environmentName')))), 'Microsoft.Resources/deployments', 'serviceBus'), '2022-09-01').outputs.name.value)]"
@@ -793,7 +793,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.37.4.10188",
-              "templateHash": "2202711821192164997"
+              "templateHash": "18332148542771403099"
             }
           },
           "parameters": {
@@ -868,7 +868,7 @@
             {
               "type": "Microsoft.Resources/deployments",
               "apiVersion": "2022-09-01",
-              "name": "[format('{0}-functions-java-module', parameters('serviceName'))]",
+              "name": "[format('{0}-functions-typescript-module', parameters('serviceName'))]",
               "properties": {
                 "expressionEvaluationOptions": {
                   "scope": "inner"
@@ -889,6 +889,9 @@
                   },
                   "identityId": {
                     "value": "[parameters('identityId')]"
+                  },
+                  "identityClientId": {
+                    "value": "[parameters('identityClientId')]"
                   },
                   "appSettings": {
                     "value": "[union(parameters('appSettings'), createObject('ServiceBusConnection__fullyQualifiedNamespace', parameters('serviceBusNamespaceFQDN'), 'ServiceBusConnection__clientId', parameters('identityClientId'), 'ServiceBusConnection__credential', 'managedidentity', 'AzureWebJobsStorage__clientId', parameters('identityClientId'), 'ServiceBusQueueName', parameters('serviceBusQueueName')))]"
@@ -928,7 +931,7 @@
                     "_generator": {
                       "name": "bicep",
                       "version": "0.37.4.10188",
-                      "templateHash": "10869484722065045722"
+                      "templateHash": "18270759856655725499"
                     }
                   },
                   "parameters": {
@@ -968,6 +971,13 @@
                       "type": "string",
                       "metadata": {
                         "description": "User assigned identity name"
+                      }
+                    },
+                    "identityClientId": {
+                      "type": "string",
+                      "defaultValue": "",
+                      "metadata": {
+                        "description": "User assigned identity client ID"
                       }
                     },
                     "runtimeName": {
@@ -1015,12 +1025,19 @@
                       "type": "string"
                     }
                   },
+                  "variables": {
+                    "baseAppSettings": {
+                      "AzureWebJobsStorage__accountName": "[parameters('storageAccountName')]",
+                      "AzureWebJobsStorage__credential": "managedidentity",
+                      "APPLICATIONINSIGHTS_AUTHENTICATION_STRING": "[if(not(empty(parameters('identityClientId'))), format('ClientId={0};Authorization=AAD', parameters('identityClientId')), '')]"
+                    }
+                  },
                   "resources": [
                     {
                       "type": "Microsoft.Web/sites/config",
                       "apiVersion": "2023-12-01",
                       "name": "[format('{0}/{1}', format('{0}-functions', parameters('name')), 'appsettings')]",
-                      "properties": "[union(parameters('appSettings'), createObject('AzureWebJobsStorage__accountName', parameters('storageAccountName'), 'AzureWebJobsStorage__credential', 'managedidentity', 'APPLICATIONINSIGHTS_CONNECTION_STRING', reference(resourceId('Microsoft.Insights/components', parameters('applicationInsightsName')), '2020-02-02').ConnectionString))]",
+                      "properties": "[union(parameters('appSettings'), variables('baseAppSettings'), if(not(empty(parameters('applicationInsightsName'))), createObject('APPLICATIONINSIGHTS_CONNECTION_STRING', reference(resourceId('Microsoft.Insights/components', parameters('applicationInsightsName')), '2020-02-02').ConnectionString), createObject()))]",
                       "dependsOn": [
                         "[resourceId('Microsoft.Web/sites', format('{0}-functions', parameters('name')))]"
                       ]
@@ -1085,11 +1102,11 @@
           "outputs": {
             "SERVICE_PROCESSOR_NAME": {
               "type": "string",
-              "value": "[reference(resourceId('Microsoft.Resources/deployments', format('{0}-functions-java-module', parameters('serviceName'))), '2022-09-01').outputs.name.value]"
+              "value": "[reference(resourceId('Microsoft.Resources/deployments', format('{0}-functions-typescript-module', parameters('serviceName'))), '2022-09-01').outputs.name.value]"
             },
             "SERVICE_API_IDENTITY_PRINCIPAL_ID": {
               "type": "string",
-              "value": "[reference(resourceId('Microsoft.Resources/deployments', format('{0}-functions-java-module', parameters('serviceName'))), '2022-09-01').outputs.identityPrincipalId.value]"
+              "value": "[reference(resourceId('Microsoft.Resources/deployments', format('{0}-functions-typescript-module', parameters('serviceName'))), '2022-09-01').outputs.identityPrincipalId.value]"
             }
           }
         }
@@ -10734,6 +10751,70 @@
         "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, if(not(empty(parameters('resourceGroupName'))), parameters('resourceGroupName'), format('{0}{1}', variables('abbrs').resourcesResourceGroups, parameters('environmentName')))), 'Microsoft.Resources/deployments', 'processorUserAssignedIdentity')]",
         "[subscriptionResourceId('Microsoft.Resources/resourceGroups', if(not(empty(parameters('resourceGroupName'))), parameters('resourceGroupName'), format('{0}{1}', variables('abbrs').resourcesResourceGroups, parameters('environmentName'))))]",
         "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, if(not(empty(parameters('resourceGroupName'))), parameters('resourceGroupName'), format('{0}{1}', variables('abbrs').resourcesResourceGroups, parameters('environmentName')))), 'Microsoft.Resources/deployments', 'serviceBus')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "appInsightsMetricsPublisher",
+      "resourceGroup": "[if(not(empty(parameters('resourceGroupName'))), parameters('resourceGroupName'), format('{0}{1}', variables('abbrs').resourcesResourceGroups, parameters('environmentName')))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "applicationInsightsName": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, if(not(empty(parameters('resourceGroupName'))), parameters('resourceGroupName'), format('{0}{1}', variables('abbrs').resourcesResourceGroups, parameters('environmentName')))), 'Microsoft.Resources/deployments', format('{0}-appinsights', uniqueString(deployment().name, parameters('location')))), '2022-09-01').outputs.name.value]"
+          },
+          "roleId": {
+            "value": "3913510d-42f4-4e42-8a64-420c390055eb"
+          },
+          "principalIds": "[if(not(empty(parameters('principalId'))), createObject('value', createArray(reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, if(not(empty(parameters('resourceGroupName'))), parameters('resourceGroupName'), format('{0}{1}', variables('abbrs').resourcesResourceGroups, parameters('environmentName')))), 'Microsoft.Resources/deployments', 'processorUserAssignedIdentity'), '2022-09-01').outputs.principalId.value, parameters('principalId'))), createObject('value', createArray(reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, if(not(empty(parameters('resourceGroupName'))), parameters('resourceGroupName'), format('{0}{1}', variables('abbrs').resourcesResourceGroups, parameters('environmentName')))), 'Microsoft.Resources/deployments', 'processorUserAssignedIdentity'), '2022-09-01').outputs.principalId.value)))]"
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.37.4.10188",
+              "templateHash": "13131232976381804131"
+            }
+          },
+          "parameters": {
+            "applicationInsightsName": {
+              "type": "string"
+            },
+            "principalIds": {
+              "type": "array"
+            },
+            "roleId": {
+              "type": "string"
+            }
+          },
+          "resources": [
+            {
+              "copy": {
+                "name": "appInsightsRoleAssignment",
+                "count": "[length(parameters('principalIds'))]"
+              },
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2020-04-01-preview",
+              "scope": "[format('Microsoft.Insights/components/{0}', parameters('applicationInsightsName'))]",
+              "name": "[guid(resourceId('Microsoft.Insights/components', parameters('applicationInsightsName')), parameters('principalIds')[copyIndex()], parameters('roleId'))]",
+              "properties": {
+                "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', parameters('roleId'))]",
+                "principalId": "[parameters('principalIds')[copyIndex()]]"
+              }
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, if(not(empty(parameters('resourceGroupName'))), parameters('resourceGroupName'), format('{0}{1}', variables('abbrs').resourcesResourceGroups, parameters('environmentName')))), 'Microsoft.Resources/deployments', format('{0}-appinsights', uniqueString(deployment().name, parameters('location'))))]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, if(not(empty(parameters('resourceGroupName'))), parameters('resourceGroupName'), format('{0}{1}', variables('abbrs').resourcesResourceGroups, parameters('environmentName')))), 'Microsoft.Resources/deployments', 'processorUserAssignedIdentity')]",
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', if(not(empty(parameters('resourceGroupName'))), parameters('resourceGroupName'), format('{0}{1}', variables('abbrs').resourcesResourceGroups, parameters('environmentName'))))]"
       ]
     },
     {

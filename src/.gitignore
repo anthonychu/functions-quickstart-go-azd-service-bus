@@ -1,0 +1,9 @@
+# Go build output
+handler
+handler.exe
+
+# Local settings (contains secrets)
+local.settings.json
+
+# Go vendor directory (if using vendoring)
+vendor/

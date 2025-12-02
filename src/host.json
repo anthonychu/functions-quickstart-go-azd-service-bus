@@ -19,7 +19,7 @@
   },
   "customHandler": {
     "description": {
-      "defaultExecutablePath": "bin/local/handler",
+      "defaultExecutablePath": "bin/linux-amd64/handler",
       "workingDirectory": "",
       "arguments": []
     },

@@ -69,6 +69,7 @@ You can initialize a project from this `azd` template in one of these ways:
         "Values": {
             "AzureWebJobsStorage": "UseDevelopmentStorage=true",
             "FUNCTIONS_WORKER_RUNTIME": "custom",
+            "AzureFunctionsJobHost__customHandler__description__defaultExecutablePath": "bin/local/handler",
             "ServiceBusConnection": "",
             "ServiceBusQueueName": "testqueue"
         }
@@ -76,7 +77,7 @@ You can initialize a project from this `azd` template in one of these ways:
     ```
 
     > [!NOTE]
-    > The `ServiceBusConnection` will be empty for local development. You'll need an actual Service Bus connection for full testing, which will be provided after deployment to Azure.
+    > The `AzureFunctionsJobHost__customHandler__description__defaultExecutablePath` setting overrides the default executable path in `host.json` to use the locally built binary. The `ServiceBusConnection` will be empty for local development. You'll need an actual Service Bus connection for full testing, which will be provided after deployment to Azure.
 
 2. Install the required Go dependencies:
 

@@ -5,8 +5,12 @@ metadata:
     template: functions-quickstart-go-azd-service-bus@0.0.1
 hooks:
   postdeploy:
-    shell: sh
-    run: ./scripts/postdeploy.sh
+    posix:
+      shell: sh
+      run: ./scripts/postdeploy.sh
+    windows:
+      shell: pwsh
+      run: ./scripts/postdeploy.ps1
 # services:
 #   processor:
 #     project: ./src/

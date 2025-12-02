@@ -1,19 +1,19 @@
 ---
-description: This end-to-end TypeScript sample demonstrates the secure triggering of a Flex Consumption plan app from a Service Bus instance secured in a virtual network.
+description: This end-to-end Go sample demonstrates the secure triggering of a Flex Consumption plan app from a Service Bus instance secured in a virtual network.
 page_type: sample
 products:
 - azure-functions
 - azure
-urlFragment: service-bus-trigger-virtual-network-typescript
+urlFragment: service-bus-trigger-virtual-network-go
 languages:
-- typescript
+- go
 - bicep
 - azdeveloper
 ---
 
-# Azure Functions TypeScript Service Bus Trigger using Azure Developer CLI
+# Azure Functions Go Service Bus Trigger using Azure Developer CLI
 
-This template repository contains a Service Bus trigger reference sample for functions written in TypeScript using the Azure Functions Node.js v4 programming model and deployed to Azure using the Azure Developer CLI (`azd`). The sample uses managed identity and a virtual network to make sure deployment is secure by default. This sample demonstrates these two key features of the Flex Consumption plan:
+This template repository contains a Service Bus trigger reference sample for functions written in Go using the Azure Functions custom handler and deployed to Azure using the Azure Developer CLI (`azd`). The sample uses managed identity and a virtual network to make sure deployment is secure by default. This sample demonstrates these two key features of the Flex Consumption plan:
 
 * **High scale**. A low concurrency of 1 is configured for the function app in the `host.json` file. Once messages are loaded into Service Bus and the app is started, you can see how it scales to one app instance per message simultaneously.
 * **Virtual network integration**. The Service Bus that this Flex Consumption app reads events from is secured behind a private endpoint. The function app can read events from it because it is configured with VNet integration. All connections to Service Bus and to the storage account associated with the Flex Consumption app also use managed identity connections instead of connection strings.
@@ -29,14 +29,12 @@ This sample processes queue-based events, demonstrating a common Azure Functions
 
 ## Prerequisites
 
-+ [Node.js 18 or later](https://nodejs.org/en/download/)
-+ [TypeScript](https://www.typescriptlang.org/download)
-+ [Azure Functions Core Tools](https://learn.microsoft.com/azure/azure-functions/functions-run-local?tabs=v4%2Clinux%2Ctypescript%2Cportal%2Cbash#install-the-azure-functions-core-tools)
++ [Go 1.21 or later](https://go.dev/dl/)
++ [Azure Functions Core Tools](https://learn.microsoft.com/azure/azure-functions/functions-run-local?tabs=v4%2Clinux%2Cgo%2Cportal%2Cbash#install-the-azure-functions-core-tools) (required for local development and deployment via `azd` hooks)
 + To use Visual Studio Code to run and debug locally:
   + [Visual Studio Code](https://code.visualstudio.com/)
   + [Azure Functions extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azurefunctions)
-  + [TypeScript extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-typescript-next)
-+ [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) (for deployment)
+  + [Go extension](https://marketplace.visualstudio.com/items?itemName=golang.go)
 + [Azure Developer CLI](https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd?tabs=winget-windows%2Cbrew-mac%2Cscript-linux&pivots=os-windows)
 + An Azure subscription with Microsoft.Web and Microsoft.App [registered resource providers](https://learn.microsoft.com/azure/azure-resource-manager/management/resource-providers-and-types#register-resource-provider)
 
@@ -47,7 +45,7 @@ You can initialize a project from this `azd` template in one of these ways:
 + Use this `azd init` command from an empty local (root) folder:
 
     ```shell
-    azd init --template functions-quickstart-typescript-azd-service-bus
+    azd init --template functions-quickstart-go-azd-service-bus
     ```
 
     Supply an environment name, such as `flexquickstart` when prompted. In `azd`, the environment is used to maintain a unique deployment context for your app.
@@ -55,8 +53,8 @@ You can initialize a project from this `azd` template in one of these ways:
 + Clone the GitHub template repository locally using the `git clone` command:
 
     ```shell
-    git clone https://github.com/Azure-Samples/functions-quickstart-typescript-azd-service-bus.git
-    cd functions-quickstart-typescript-azd-service-bus
+    git clone https://github.com/Azure-Samples/functions-quickstart-go-azd-service-bus.git
+    cd functions-quickstart-go-azd-service-bus
     ```
 
     You can also clone the repository from your own fork in GitHub.
@@ -70,7 +68,7 @@ You can initialize a project from this `azd` template in one of these ways:
         "IsEncrypted": false,
         "Values": {
             "AzureWebJobsStorage": "UseDevelopmentStorage=true",
-            "FUNCTIONS_WORKER_RUNTIME": "node",
+            "FUNCTIONS_WORKER_RUNTIME": "custom",
             "ServiceBusConnection": "",
             "ServiceBusQueueName": "testqueue"
         }
@@ -80,17 +78,17 @@ You can initialize a project from this `azd` template in one of these ways:
     > [!NOTE]
     > The `ServiceBusConnection` will be empty for local development. You'll need an actual Service Bus connection for full testing, which will be provided after deployment to Azure.
 
-2. Install the required Node.js packages:
+2. Install the required Go dependencies:
 
     ```shell
     cd src
-    npm install
+    go mod download
     ```
 
-3. Build the TypeScript code:
+3. Build the Go binary for local development:
 
     ```shell
-    npm run build
+    go build -o bin/local/handler .
     ```
 
 ## Run your app from the terminal
@@ -108,7 +106,7 @@ You can initialize a project from this `azd` template in one of these ways:
 
     ```
     Functions:
-        serviceBusQueueTrigger: serviceBusQueueTrigger
+        serviceBusQueueTrigger: serviceBusTrigger
     ```
 
 3. To fully test the Service Bus functionality, you'll need to deploy to Azure first (see [Deploy to Azure](#deploy-to-azure) section) and then send messages through the Azure portal.
@@ -119,43 +117,72 @@ You can initialize a project from this `azd` template in one of these ways:
 
 1. Open the project root folder in Visual Studio Code.
 2. Open the `src` folder in the terminal within VS Code.
-3. Press **Run/Debug (F5)** to run in the debugger. 
-4. The Azure Functions extension will automatically detect your function and start the local runtime.
-5. The function will start and be ready to receive Service Bus messages (though local testing requires an actual Service Bus connection).
+3. Build the Go binary if you haven't already: `go build -o bin/local/handler .`
+4. Press **Run/Debug (F5)** to run in the debugger. 
+5. The Azure Functions extension will automatically detect your function and start the local runtime.
+6. The function will start and be ready to receive Service Bus messages (though local testing requires an actual Service Bus connection).
 
 ## Source Code
 
-The Service Bus trigger function is defined in [`src/index.ts`](./src/index.ts). The function uses the Azure Functions Node.js v4 programming model with the `app.serviceBusQueue()` method to register the trigger.
+This sample uses the Azure Functions [custom handler](https://learn.microsoft.com/azure/azure-functions/functions-custom-handlers) feature to run Go code. The function trigger is defined in [`src/serviceBusQueueTrigger/function.json`](./src/serviceBusQueueTrigger/function.json), and the handler logic is implemented in [`src/main.go`](./src/main.go).
 
-This code shows the Service Bus queue trigger:
+The `function.json` defines the Service Bus queue trigger:
 
-```typescript
-import { app, InvocationContext } from '@azure/functions';
-
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-app.serviceBusQueue('serviceBusQueueTrigger', {
-    queueName: '%ServiceBusQueueName%',
-    connection: 'ServiceBusConnection',
-    handler: async (message: unknown, context: InvocationContext): Promise<void> => {
-        context.log('TypeScript ServiceBus Queue trigger start processing a message:', message);
-        
-        // Simulate the same 30-second processing time as the original Python function
-        await delay(30000);
-        
-        context.log('TypeScript ServiceBus Queue trigger end processing a message');
+```json
+{
+  "bindings": [
+    {
+      "name": "message",
+      "type": "serviceBusTrigger",
+      "direction": "in",
+      "queueName": "%ServiceBusQueueName%",
+      "connection": "ServiceBusConnection"
     }
-});
+  ]
+}
+```
+
+The Go handler in `main.go` processes the Service Bus messages:
+
+```go
+func serviceBusQueueTriggerHandler(c *gin.Context) {
+    var invokeRequest InvokeRequest
+    if err := c.ShouldBindJSON(&invokeRequest); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
+        return
+    }
+
+    // Extract the message from the request data
+    var message interface{}
+    if msgData, ok := invokeRequest.Data["message"]; ok {
+        if err := json.Unmarshal(msgData, &message); err != nil {
+            message = string(msgData)
+        }
+    }
+
+    fmt.Printf("Go ServiceBus Queue trigger start processing a message: %v\n", message)
+
+    // Simulate 5-second processing time
+    time.Sleep(5 * time.Second)
+
+    fmt.Printf("Go ServiceBus Queue trigger end processing a message\n")
+
+    c.JSON(http.StatusOK, InvokeResponse{
+        Outputs:     make(map[string]interface{}),
+        Logs:        []string{"Message processed"},
+        ReturnValue: nil,
+    })
+}
 ```
 
 Key aspects of this code:
 
-+ The `app.serviceBusQueue()` method registers a function to trigger when messages arrive in the specified Service Bus queue
-+ The queue name is read from the `ServiceBusQueueName` environment variable using the `%ServiceBusQueueName%` syntax
-+ The connection string is read from the `ServiceBusConnection` setting
-+ The function includes a 30-second `await delay(30000)` delay to simulate message processing time and demonstrate the scaling behavior
-+ Each message is logged for debugging purposes
-+ Uses modern TypeScript with full type safety and async/await patterns
++ The custom handler runs as an HTTP server using the Gin framework, listening on the port specified by `FUNCTIONS_CUSTOMHANDLER_PORT`
++ The Azure Functions host routes Service Bus trigger invocations to the `/serviceBusQueueTrigger` endpoint
++ The queue name is configured in `function.json` using the `%ServiceBusQueueName%` syntax to read from environment variables
++ The connection is configured via the `ServiceBusConnection` setting
++ The function includes a 5-second `time.Sleep()` delay to simulate message processing time and demonstrate the scaling behavior
++ Message metadata (MessageId, EnqueuedTimeUtc, DeliveryCount) is available in the request for logging and debugging
 
 The function configuration in [`src/host.json`](./src/host.json) sets `maxConcurrentCalls` to 1 for the Service Bus extension:
 
@@ -203,7 +230,7 @@ After deployment completes successfully, `azd` provides you with the URL endpoin
    - Send 1,000 messages using the Service Bus Explorer
    - Open Application Insights live metrics and observe the number of instances ('servers online')
    - Notice your app scaling the number of instances to handle processing the messages
-   - Given the purposeful 30-second delay in the app code, you should see messages being processed in 30-second intervals once the app's maximum instance count (default of 100) is reached
+   - Given the purposeful 5-second delay in the app code, you should see messages being processed quickly as the app scales out
    ![Live metrics available](./img/live-metrics.png)
 
 The sample telemetry should show that your messages are triggering the function and making their way from Service Bus through the VNet into the function app for processing.

@@ -38,7 +38,6 @@ func main() {
 
 	// Register the Service Bus queue trigger handler
 	router.POST("/serviceBusQueueTrigger", serviceBusQueueTriggerHandler)
-
 	fmt.Printf("Go server listening on port: %s\n", port)
 	if err := router.Run(":" + port); err != nil {
 		fmt.Printf("Failed to start server: %v\n", err)
@@ -81,8 +80,8 @@ func serviceBusQueueTriggerHandler(c *gin.Context) {
 		fmt.Printf("DeliveryCount: %v\n", deliveryCount)
 	}
 
-	// Simulate 30-second processing time
-	time.Sleep(30 * time.Second)
+	// Simulate 5-second processing time
+	time.Sleep(5 * time.Second)
 
 	logs = append(logs, "Go ServiceBus Queue trigger end processing a message")
 	fmt.Printf("Go ServiceBus Queue trigger end processing a message\n")

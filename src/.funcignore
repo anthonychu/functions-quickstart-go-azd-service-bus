@@ -61,3 +61,5 @@ logs/
 .venv/
 __pycache__/
 *.pyc
+
+bin/local/handler

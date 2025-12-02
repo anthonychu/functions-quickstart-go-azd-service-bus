@@ -18,7 +18,7 @@ param identityClientId string = ''
 param deploymentStorageContainerName string
 
 module processor '../core/host/functions-flexconsumption.bicep' = {
-  name: '${serviceName}-functions-typescript-module'
+  name: '${serviceName}-functions-go-module'
   params: {
     name: name
     location: location
@@ -33,6 +33,7 @@ module processor '../core/host/functions-flexconsumption.bicep' = {
         ServiceBusConnection__credential : 'managedidentity'
         AzureWebJobsStorage__clientId : identityClientId
         ServiceBusQueueName: serviceBusQueueName
+        AzureFunctionsJobHost__customHandler__description__defaultExecutablePath: 'bin/linux-amd64/handler'
       })
     applicationInsightsName: applicationInsightsName
     appServicePlanId: appServicePlanId

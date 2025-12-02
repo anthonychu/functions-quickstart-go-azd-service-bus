@@ -67,8 +67,8 @@ module processor './app/processor.bicep' = {
     tags: tags
     applicationInsightsName: monitoring.outputs.name
     appServicePlanId: appServicePlan.outputs.resourceId
-    runtimeName: 'node'
-    runtimeVersion: '20'
+    runtimeName: 'custom'
+    runtimeVersion: '1.0'
     storageAccountName: storage.outputs.name
     identityId: processorUserAssignedIdentity.outputs.resourceId
     identityClientId: processorUserAssignedIdentity.outputs.clientId

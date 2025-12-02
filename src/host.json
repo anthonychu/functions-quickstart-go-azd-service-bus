@@ -19,7 +19,7 @@
   },
   "customHandler": {
     "description": {
-      "defaultExecutablePath": "handler",
+      "defaultExecutablePath": "bin/local/handler",
       "workingDirectory": "",
       "arguments": []
     },

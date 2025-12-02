@@ -1,12 +1,16 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
 
-name: functions-e2e-sb-vnet-typescript
+name: functions-quickstart-go-azd-service-bus
 metadata:
-    template: functions-e2e-sb-vnet-typescript@0.0.1
-services:
-  processor:
-    project: ./src/
-    language: ts
-    host: function
+    template: functions-quickstart-go-azd-service-bus@0.0.1
+hooks:
+  postdeploy:
+    shell: sh
+    run: ./scripts/postdeploy.sh
+# services:
+#   processor:
+#     project: ./src/
+#     language: go
+#     host: function
     
     

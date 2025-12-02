@@ -13,23 +13,14 @@ __queuestorage__
 # Local settings (contains secrets)
 local.settings.json
 
-# Node.js
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-
-# Build output (we deploy the compiled JS, not the TS)
-# Note: Don't ignore dist/ as that contains the compiled output we need
+# Go build output (local only, we deploy linux binary)
+bin/local/
 
 # Testing
 test/
 tests/
-*.test.js
-*.spec.js
+*_test.go
 coverage/
-.nyc_output/
 
 # Environment files
 .env
@@ -57,9 +48,5 @@ Thumbs.db
 logs/
 *.log
 
-# Python (legacy - can be removed if no Python code remains)
-.venv/
-__pycache__/
-*.pyc
-
+# Local binary
 bin/local/handler
